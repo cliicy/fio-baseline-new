@@ -12,6 +12,17 @@ function stringSwitch() {
     return $string
 }
 
+function card_bind_cpu() {
+  get_info=$(python3 cpu_bind_core.py -n $1)
+  echo "${get_info}" | grep "check env ok" >/dev/null
+
+  if [[ $? -eq 0 ]]; then
+    echo "check bind core env ok, do next step"
+    nvme_bind_list=$(echo "${get_info}" | grep "nvme")
+  fi
+
+}
+
 function collect_power_consumption() {
     drv_name=$1
     smartlog0xc2=`nvme get-log /dev/${drv_name} --log-id=0xc2 --log-len=128 2>/dev/null`

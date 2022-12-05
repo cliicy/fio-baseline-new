@@ -5,7 +5,9 @@ my_dir="$( cd "$( dirname "$0"  )" && pwd  )"
 # multiple disks in parallel
 # example disks=(sfdv0n1 sfdv1n1 nvme0n1 nvme1n1)
 #disks=(nvme0n1 nvme1n1 nvme2n1)
-disks=(nvme0n1)
+disks=(nvme0n1 nvme2n1)
+
+#exit 0 
 
 # #another example to run test for even more disks
 # #
@@ -73,6 +75,16 @@ do
     collect_drv_info ${disk} > ${drvinfo_dir}/${disk}_1.info
 done
 
+if [[ ${#disks[@]} -gt 1 ]];then
+    cpu_bind_file=card_bind_core.log
+    echo "multiple-card test, need bind CPU core"
+    card_bind_cpu 2
+    cpu_bind=" --cpus_allowed="
+else
+    echo "single-card test, dont need bind-cpu-core"
+    cpu_bind=""
+fi
+
 for workload in ${workloads[@]}
 do
     iostat_pid_list=""
@@ -85,7 +97,12 @@ do
         ${my_dir}/record_thermal.sh /dev/${disk} ${thermal_dir}/${disk}_${workload}.thermal &
         thermal_pid_list="${thermal_pid_list} $!"
 
+        if [ -f "${cpu_bind_file}" ] && [ "${cpu_bind}" != "" ] ; then
+            cpu_bind_info=${cpu_bind}`grep $disk ${cpu_bind_file} | awk '{print $2}'` 
+            echo $cpu_bind_info
+        fi
         fio ${comp_opt_str} \
+            ${cpu_bind_info} \
             --filename=/dev/${disk} \
             --output=${result_dir}/${disk}_${workload}.fio \
             ${my_dir}/jobs/${workload}.fio &
