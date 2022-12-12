@@ -71,7 +71,7 @@ collect_sys_info > ${output_dir}/sysinfo.log
 
 for disk in ${disks[@]}
 do
-    echo y | nvme format /dev/${disk}
+    echo y | nvme format -s 1 /dev/${disk}
     collect_drv_info ${disk} > ${drvinfo_dir}/${disk}_1.info
 done
 
